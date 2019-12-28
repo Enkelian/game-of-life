@@ -21,7 +21,7 @@ public class GameFrame extends JFrame {
         this.setTitle("Game of life");
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.gamePanel = new GamePanel(this.board);
-        this.sidePanel = new SidePanel(this.gamePanel.getHeight());
+        this.sidePanel = new SidePanel(this.gamePanel.getHeight(), this.board);
         this.sidePanel.addObserver(this.gamePanel);
         this.contents = new JPanel(new BorderLayout());
         this.contents.add(this.gamePanel, BorderLayout.LINE_START);

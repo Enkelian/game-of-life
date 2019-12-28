@@ -1,10 +1,11 @@
 package Game;
 
 
-import javax.swing.JToolBar;
-import javax.swing.JButton;
+import javax.swing.*;
 import java.awt.Dimension;
+import javax.swing.JCheckBox;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,10 +15,13 @@ public class SidePanel extends JToolBar {
     private boolean isPaused;
     private JButton pauseButton;
     private JButton zoomIn, zoomOut;
+    private Board board;
     private List<IButtonPressedObserver> observers;
 
-    public SidePanel (int height){
+    public SidePanel (int height, Board board){
+        this.setOrientation(VERTICAL);
         this.size = new Coordinate(200, height);
+        this.board = board;
         this.setPreferredSize(new Dimension(this.size.x, this.size.y));
         this.isPaused = false;
 
@@ -33,8 +37,43 @@ public class SidePanel extends JToolBar {
         this.zoomOut.addActionListener(this::zoomPressed);
         this.add(this.zoomOut);
 
+        this.addBirthRulesCheckBoxes();
+        this.addSurvivalRulesCheckBoxes();
+
         this.observers = new ArrayList<>();
 
+    }
+
+    private void addBirthRulesCheckBoxes(){
+        this.add(new JLabel("Birth rules:"));
+        for(int rule = 1; rule <= 8; rule++){
+            JCheckBox birthRule = new JCheckBox(""+rule, this.board.containsBirthRule(rule));
+            birthRule.addActionListener(this::birthRuleAction);
+            this.add(birthRule);
+        }
+    }
+
+    private void birthRuleAction(ActionEvent e){
+        JCheckBox birthRule = (JCheckBox) e.getSource();
+        int rule = Integer.parseInt(birthRule.getText());
+        if(birthRule.isSelected()) this.board.addBirthRule(rule);
+        else this.board.removeBirthRule(rule);
+    }
+
+    private void addSurvivalRulesCheckBoxes(){
+        this.add(new JLabel("Survival rules:"));
+        for(int rule = 1; rule <= 8; rule++){
+            JCheckBox survivalRule = new JCheckBox(""+rule, this.board.containsSurvivalRule(rule));
+            survivalRule.addActionListener(this::survivalRuleAction);
+            this.add(survivalRule);
+        }
+    }
+
+    private void survivalRuleAction(ActionEvent e){
+        JCheckBox survivalRule = (JCheckBox) e.getSource();
+        int rule = Integer.parseInt(survivalRule.getText());
+        if(survivalRule.isSelected()) this.board.addSurvivalRule(rule);
+        else this.board.removeSurvivalRule(rule);
     }
 
     private void pausePressed(ActionEvent e){
@@ -52,8 +91,6 @@ public class SidePanel extends JToolBar {
             for(IButtonPressedObserver observer : this.observers) observer.onZoomOutPressed();
         }
     }
-
-
 
     public void addObserver(IButtonPressedObserver observer){
         this.observers.add(observer);

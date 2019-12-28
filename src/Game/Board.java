@@ -38,6 +38,26 @@ public class Board {
 
     public Coordinate getLowerBond(){ return this.lowerBond; }
 
+    public boolean containsBirthRule(int rule){ return this.birthRules.contains(rule); }
+
+    public boolean containsSurvivalRule(int rule){ return this.birthRules.contains(rule); }
+
+    public void addBirthRule(int rule){
+        if(!this.containsBirthRule(rule)) this.birthRules.add(rule);
+    }
+
+    public void addSurvivalRule(int rule){
+        if(!this.containsSurvivalRule(rule)) this.survivalRules.add(rule);
+    }
+
+    public void removeBirthRule(int rule){
+        if(this.birthRules.contains(rule)) this.birthRules.remove(rule);
+    }
+
+    public void removeSurvivalRule(int rule){
+        if(this.survivalRules.contains(rule))this.survivalRules.remove(rule);
+    }
+
     public boolean isAliveAt(Coordinate coordinate){
         for(Cell cell : this.aliveCells){
             if(cell.getCoordinate().equals(coordinate)) return true;
