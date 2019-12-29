@@ -15,6 +15,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     private int cellSizeIdx;
     private int cellSize;
     private boolean running;
+    private boolean showTraces;
     private int delay = 100;
 
     private Coordinate focusLowerBound, focusUpperBound;
@@ -26,6 +27,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.setAllowedCellSizes();
         this.cellSizeIdx = this.allowedCellSizes.size()/2;
         this.cellSize = this.allowedCellSizes.get(this.cellSizeIdx);
+        this.showTraces = true;
         this.focusLowerBound = new Coordinate(0,0);
         this.focusUpperBound = new Coordinate(this.bound.x/this.cellSize, this.bound.y/this.cellSize);
         this.setFocusable(true);
@@ -43,8 +45,13 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                 int rectPosX = (x - (this.focusLowerBound.x)) * this.cellSize;
                 int rectPosY = (y - (this.focusLowerBound.y)) * this.cellSize;
 
-                if(this.board.isAliveAt(new Coordinate(x, y))) {
+                Coordinate currentCoordinate = new Coordinate(x, y);
+                if(this.board.isAliveAt(currentCoordinate)) {
                     g.setColor(Color.WHITE);
+                    g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
+                }
+                else if(this.showTraces && this.board.traceAgeAt(currentCoordinate) != -1){
+                    g.setColor(new Color(0,0,255 - this.board.traceAgeAt(currentCoordinate)*10));
                     g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
                 }
                 else {
@@ -95,7 +102,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     private List<Integer> setAllowedCellSizes(){
         this.allowedCellSizes = new ArrayList<>();
 
-        for(int size = this.minCellSize; size < this.maxCellSize; size++){
+        for(int size = this.minCellSize; size <= this.maxCellSize; size++){
             if(this.bound.x % size == 0 && this.bound.y % size == 0) allowedCellSizes.add(size);
         }
 
@@ -106,6 +113,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         int newWidth = ((this.focusUpperBound.x - this.focusLowerBound.x) * oldCellSize) / this.cellSize;
         int newHeight = ((this.focusUpperBound.y - this.focusLowerBound.y) * oldCellSize) / this.cellSize;
         this.focusUpperBound = new Coordinate( this.focusLowerBound.x + newWidth, this.focusLowerBound.y + newHeight);
+
     }
 
     @Override
@@ -127,6 +135,11 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.scaleUpperBound(oldCellSize);
         this.repaint();
 
+    }
+
+    @Override
+    public void onToggleTraces() {
+        this.showTraces = !this.showTraces;
     }
 
     @Override

@@ -6,7 +6,7 @@ public class Cell {
 
     private Coordinate coordinate;
     private Integer neighboursCount;
-    private Board board;
+    protected Board board;
 
     public Cell(Coordinate coordinate, Board board){
         this.coordinate = coordinate;

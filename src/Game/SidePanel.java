@@ -5,7 +5,6 @@ import javax.swing.*;
 import java.awt.Dimension;
 import javax.swing.JCheckBox;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,9 @@ public class SidePanel extends JToolBar {
         this.size = new Coordinate(200, height);
         this.board = board;
         this.setPreferredSize(new Dimension(this.size.x, this.size.y));
+        this.setMaximumSize(new Dimension(this.size.x, this.size.y));
         this.isPaused = false;
+        this.setFloatable(false);
 
         this.pauseButton = new JButton("Pause");
         this.pauseButton.addActionListener(this::pausePressed);
@@ -37,11 +38,22 @@ public class SidePanel extends JToolBar {
         this.zoomOut.addActionListener(this::zoomPressed);
         this.add(this.zoomOut);
 
+        this.addShowTracesCheckBox();
         this.addBirthRulesCheckBoxes();
         this.addSurvivalRulesCheckBoxes();
 
         this.observers = new ArrayList<>();
 
+    }
+
+    private void addShowTracesCheckBox(){
+        JCheckBox showTraces = new JCheckBox("Show traces", true);
+        showTraces.addActionListener( e -> this.toggleTraces());
+        this.add(showTraces);
+    }
+
+    private void toggleTraces(){
+        for(IButtonPressedObserver observer : this.observers) observer.onToggleTraces();
     }
 
     private void addBirthRulesCheckBoxes(){

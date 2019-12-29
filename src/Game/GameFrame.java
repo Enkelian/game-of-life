@@ -24,13 +24,15 @@ public class GameFrame extends JFrame {
         this.sidePanel = new SidePanel(this.gamePanel.getHeight(), this.board);
         this.sidePanel.addObserver(this.gamePanel);
         this.contents = new JPanel(new BorderLayout());
-        this.contents.add(this.gamePanel, BorderLayout.LINE_START);
-        this.contents.add(this.sidePanel, BorderLayout.LINE_END);
+        this.contents.add(this.gamePanel, BorderLayout.LINE_END);
+        this.contents.add(this.sidePanel, BorderLayout.LINE_START);
         this.setContentPane(this.contents);
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         this.gamePanel.init();
     }
+
+
 
 }
