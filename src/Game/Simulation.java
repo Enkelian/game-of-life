@@ -1,8 +1,6 @@
 package Game;
 import javax.swing.*;
 import javax.swing.UIManager.*;
-import java.awt.*;
-import java.util.Arrays;
 
 public class Simulation {
 
@@ -36,11 +34,14 @@ public class Simulation {
 
         Board board = new Board();
 
-        new GameFrame(board);
+        try{
+            new GameFrame(board);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
     }
 
-    //TODO: coloring?
-    //TODO: traces?
+    //TODO: map bounds
 
 }

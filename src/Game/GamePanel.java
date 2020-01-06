@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.*;
 
-public class GamePanel extends JPanel implements Runnable, IButtonPressedObserver, MouseListener, KeyListener {
+public class GamePanel extends JPanel implements Runnable, IButtonPressedObserver, KeyListener, MouseListener, MouseMotionListener {
 
     private Board board;
     private Coordinate bound;
@@ -16,6 +16,8 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     private int cellSize;
     private boolean running;
     private boolean showTraces;
+    private boolean draw;
+    private CellColor activeColor;
     private int delay = 100;
 
     private Coordinate focusLowerBound, focusUpperBound;
@@ -28,10 +30,13 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.cellSizeIdx = this.allowedCellSizes.size()/2;
         this.cellSize = this.allowedCellSizes.get(this.cellSizeIdx);
         this.showTraces = true;
+        this.draw = true;
+        this.activeColor = CellColor.WHITE;
         this.focusLowerBound = new Coordinate(0,0);
         this.focusUpperBound = new Coordinate(this.bound.x/this.cellSize, this.bound.y/this.cellSize);
         this.setFocusable(true);
         this.addMouseListener(this);
+        this.addMouseMotionListener(this);
         this.addKeyListener(this);
     }
 
@@ -47,11 +52,26 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
 
                 Coordinate currentCoordinate = new Coordinate(x, y);
                 if(this.board.isAliveAt(currentCoordinate)) {
-                    g.setColor(Color.WHITE);
+                    switch (this.board.getCellAt(currentCoordinate).getColor()){
+                        case WHITE:
+                            g.setColor(Color.WHITE);
+                            break;
+                        case RED:
+                            g.setColor(Color.RED);
+                            break;
+                        case GREEN:
+                            g.setColor(Color.GREEN);
+                            break;
+                        case ORANGE:
+                            g.setColor(Color.ORANGE);
+                        default:
+                            break;
+                    }
+
                     g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
                 }
                 else if(this.showTraces && this.board.traceAgeAt(currentCoordinate) != -1){
-                    g.setColor(new Color(0,0,255 - this.board.traceAgeAt(currentCoordinate)*10));
+                    g.setColor(new Color(0,0,255 - this.board.traceAgeAt(currentCoordinate)*8));
                     g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
                 }
                 else {
@@ -66,7 +86,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     public int getHeight(){ return (this.focusUpperBound.y - this.focusLowerBound.y)*this.cellSize; }
 
     public void init(){
-        this.running = true;
+        this.running = false;
         this.run();
     }
 
@@ -143,23 +163,28 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     }
 
     @Override
-    public void mouseClicked(MouseEvent mouseEvent) {
-        this.requestFocus();
-        if(this.running) return;
-        Coordinate coordinate = new Coordinate((mouseEvent.getX() / this.cellSize) + this.focusLowerBound.x, (mouseEvent.getY() / this.cellSize) + this.focusLowerBound.y);
-        if (board.isAliveAt(coordinate)) board.removeCell(coordinate);
-        else board.addCell(coordinate);
-        this.repaint();
+    public void onToggleDraw(){ this.draw = !this.draw; }
+
+    @Override
+    public void onColorButtonClicked(CellColor color) {
+        this.activeColor = color;
     }
 
     @Override
-    public void mousePressed(MouseEvent mouseEvent) { }
+    public void mouseClicked(MouseEvent mouseEvent) {
+        this.drawErase(mouseEvent);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent mouseEvent) {
+    }
 
     @Override
     public void mouseReleased(MouseEvent mouseEvent) { }
 
     @Override
-    public void mouseEntered(MouseEvent mouseEvent) { }
+    public void mouseEntered(MouseEvent mouseEvent) {
+    }
 
     @Override
     public void mouseExited(MouseEvent mouseEvent) { }
@@ -195,6 +220,25 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         if(!this.running) this.repaint();
     }
 
+    private void drawErase(MouseEvent mouseEvent){
+        this.requestFocus();
+        if(this.running) return;
+        Coordinate coordinate = new Coordinate((mouseEvent.getX() / this.cellSize) + this.focusLowerBound.x, (mouseEvent.getY() / this.cellSize) + this.focusLowerBound.y);
+        if (this.draw) board.addCell(coordinate, this.activeColor);
+        else board.removeCell(coordinate);
+        this.repaint();
+    }
+
     @Override
     public void keyReleased(KeyEvent keyEvent) { }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent) {
+        this.drawErase(mouseEvent);
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent mouseEvent) {
+
+    }
 }

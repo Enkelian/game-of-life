@@ -1,17 +1,22 @@
 package Game;
 
-import java.util.List;
-
 public class Cell {
 
     private Coordinate coordinate;
     private Integer neighboursCount;
-    protected Board board;
+    private CellColor color;
+    Board board;
 
     public Cell(Coordinate coordinate, Board board){
         this.coordinate = coordinate;
         this.board = board;
         this.neighboursCount = 0;
+        this.color = CellColor.WHITE;
+    }
+
+    public Cell(Coordinate coordinate, Board board, CellColor color){
+        this(coordinate, board);
+        this.color = color;
     }
 
     @Override
@@ -23,10 +28,11 @@ public class Cell {
 
     @Override
     public String toString() {
-//        if(this.isAlive()) return "1";
-//        else return "0";
-        return this.neighboursCount.toString();
+        return "coordinate='" + this.coordinate + '\'' + ", color='" + this.color + '\'';
     }
+
+
+    public CellColor getColor(){ return this.color; }
 
     public int getNeighboursCount(){ return this.neighboursCount; }
 
@@ -39,6 +45,5 @@ public class Cell {
             if(this.board.isAliveAt(coordinate)) this.neighboursCount++;
         }
     }
-
 
 }

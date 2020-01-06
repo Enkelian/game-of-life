@@ -1,10 +1,14 @@
 package Game;
 
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.Dimension;
+import java.awt.*;
 import javax.swing.JCheckBox;
 import java.awt.event.ActionEvent;
+import java.io.*;
+
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,38 +16,63 @@ public class SidePanel extends JToolBar {
 
     private Coordinate size;
     private boolean isPaused;
-    private JButton pauseButton;
+    private JButton pauseButton, drawErase, saveAs;
     private JButton zoomIn, zoomOut;
     private Board board;
     private List<IButtonPressedObserver> observers;
+    private ImageIcon startIcon, pauseIcon;
 
-    public SidePanel (int height, Board board){
+    public SidePanel (int height, Board board) throws IOException {
         this.setOrientation(VERTICAL);
         this.size = new Coordinate(200, height);
         this.board = board;
         this.setPreferredSize(new Dimension(this.size.x, this.size.y));
         this.setMaximumSize(new Dimension(this.size.x, this.size.y));
-        this.isPaused = false;
+        this.isPaused = true;
         this.setFloatable(false);
 
-        this.pauseButton = new JButton("Pause");
-        this.pauseButton.addActionListener(this::pausePressed);
+        this.startIcon = new ImageIcon(ImageIO.read(new File("res\\start.png")));
+        this.pauseIcon = new ImageIcon(ImageIO.read(new File("res\\pause.png")) );
+
+
+        this.pauseButton = new JButton(this.startIcon);
+        this.pauseButton.addActionListener(e -> this.pausePressed(this.pauseButton));
         this.add(this.pauseButton);
 
-        this.zoomIn = new JButton("Zoom in");
+        this.saveAs = new JButton("Save as");
+        this.saveAs.addActionListener(e -> this.saveToFile());
+        this.add(this.saveAs);
+
+        this.zoomIn = new JButton("Zoom in", new ImageIcon(ImageIO.read(new File("res\\plus.png"))));
         this.zoomIn.addActionListener(this::zoomPressed);
         this.add(this.zoomIn);
 
-        this.zoomOut = new JButton("Zoom out");
+        this.zoomOut = new JButton("Zoom out", new ImageIcon(ImageIO.read(new File("res\\minus.png"))));
         this.zoomOut.addActionListener(this::zoomPressed);
         this.add(this.zoomOut);
 
+        this.addDrawEraseButton();
+        this.addColorButtons();
         this.addShowTracesCheckBox();
         this.addBirthRulesCheckBoxes();
         this.addSurvivalRulesCheckBoxes();
 
         this.observers = new ArrayList<>();
 
+    }
+
+    private void addColorButtons(){
+        for(CellColor color : CellColor.values()){
+            JButton colorButton = new JButton(color.toString());
+            colorButton.addActionListener( e -> colorButtonClicked(color));
+            this.add(colorButton);
+        }
+    }
+
+    private void addDrawEraseButton(){
+        this.drawErase = new JButton("Draw");
+        this.drawErase.addActionListener(this::toggleDraw);
+        this.add(this.drawErase);
     }
 
     private void addShowTracesCheckBox(){
@@ -54,6 +83,20 @@ public class SidePanel extends JToolBar {
 
     private void toggleTraces(){
         for(IButtonPressedObserver observer : this.observers) observer.onToggleTraces();
+    }
+
+    private void colorButtonClicked(CellColor color){
+        for(IButtonPressedObserver observer : this.observers) observer.onColorButtonClicked(color);
+
+    }
+
+    private void toggleDraw(ActionEvent e){
+        if(this.isPaused) {
+            for (IButtonPressedObserver observer : this.observers) observer.onToggleDraw();
+            if ("Draw".equals(e.getActionCommand())) this.drawErase.setText("Erase");
+            else this.drawErase.setText("Draw");
+        }
+
     }
 
     private void addBirthRulesCheckBoxes(){
@@ -88,9 +131,9 @@ public class SidePanel extends JToolBar {
         else this.board.removeSurvivalRule(rule);
     }
 
-    private void pausePressed(ActionEvent e){
-        if("Pause".equals(e.getActionCommand())) this.pauseButton.setText("Start");
-        else this.pauseButton.setText("Pause");
+    private void pausePressed(JButton button){
+        if(this.pauseIcon.equals(button.getIcon())) this.pauseButton.setIcon(this.startIcon);
+        else this.pauseButton.setIcon(this.pauseIcon);
         this.isPaused = !this.isPaused;
         for(IButtonPressedObserver observer : this.observers) observer.onPausePressed();
     }
@@ -101,6 +144,28 @@ public class SidePanel extends JToolBar {
         }
         else if("Zoom out".equals(e.getActionCommand())){
             for(IButtonPressedObserver observer : this.observers) observer.onZoomOutPressed();
+        }
+    }
+
+    private void saveToFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        int retval = fileChooser.showSaveDialog(this.saveAs);
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (file == null) {
+                return;
+            }
+            if (!file.getName().toLowerCase().endsWith(".txt")) {
+                file = new File(file.getParentFile(), file.getName() + ".txt");
+            }
+            try {
+                JTextArea textArea = new JTextArea();
+                for(Cell cell : this.board.getCurrentState())  textArea.append(cell.toString());
+                textArea.write(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
+                Desktop.getDesktop().open(file);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

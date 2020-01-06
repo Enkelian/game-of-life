@@ -1,20 +1,17 @@
 package Game;
 
-import javafx.geometry.Side;
-
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 public class GameFrame extends JFrame {
 
-    private int width;
-    private int height;
     private Board board;
     private GamePanel gamePanel;
     private SidePanel sidePanel;
     private JPanel contents;
 
-    public GameFrame(Board board){
+    public GameFrame(Board board) throws IOException {
 
         this.board = board;
 

@@ -1,5 +1,6 @@
 package Game;
 
+
 import java.util.*;
 import java.util.List;
 
@@ -7,7 +8,7 @@ public class Board {
 
     private List<Integer> survivalRules;        //for Conway's only 2 and 3
     private List<Integer> birthRules;           //for Conway's only 3
-    private Coordinate lowerBond, upperBound;       //not initial values anymore, soon to be computed every day
+    private Coordinate lowerBond, upperBound;
     private HashMap<Coordinate, Cell> aliveCellsByPosition;
     private HashMap<Coordinate, Trace> tracesByPosition;
     private List<IDayEndObserver> dayEndObservers;
@@ -19,13 +20,16 @@ public class Board {
         this.aliveCellsByPosition = new HashMap<>();
         this.tracesByPosition = new HashMap<>();
         this.dayEndObservers = new ArrayList<>();
-        this.maxTraceAge = 20;
+        this.maxTraceAge = 30;
+
         this.survivalRules.add(2);
         this.survivalRules.add(3);
         this.birthRules.add(3);
 
-        this.setGlider(100, 50);
-        this.setGlider(30,30);
+        this.setGlider(100, 50, CellColor.WHITE);
+        this.setGlider(30,30, CellColor.RED);
+        this.setGlider(50,40, CellColor.GREEN);
+        this.setGlider(70, 10, CellColor.ORANGE);
 
         this.updateNeighbours();
     }
@@ -55,8 +59,10 @@ public class Board {
     public void removeSurvivalRule(Integer rule){ this.survivalRules.remove(rule); }
 
     public boolean isAliveAt(Coordinate coordinate){
-        return this.aliveCellsByPosition.get(coordinate) != null;
+        return this.getCellAt(coordinate) != null;
     }
+
+    public Cell getCellAt(Coordinate coordinate){ return this.aliveCellsByPosition.get(coordinate); }
 
     public int traceAgeAt(Coordinate coordinate){
         Trace traceHere = this.tracesByPosition.get(coordinate);
@@ -80,13 +86,23 @@ public class Board {
         }
 
         ArrayList<Coordinate> invalidCandidates = new ArrayList<>();
+        HashMap<Coordinate, HashMap<CellColor, Integer>> neighboursCountByColor = new HashMap<>();
 
         for(Coordinate coordinate : candidatesCoordinates){
             if(this.isAliveAt(coordinate)) invalidCandidates.add(coordinate);
             else{
                 int aliveNeighboursCount = 0;
+                HashMap<CellColor, Integer> neighboursCount = new HashMap<>();
+                for(CellColor color: CellColor.values()) neighboursCount.put(color, 0);
+                boolean anyValid = false;
                 for(Coordinate neighbour : coordinate.neighbours()){
-                    if(this.isAliveAt(neighbour)) aliveNeighboursCount++;
+                    Cell neighbourCell = this.getCellAt(neighbour);
+                    if(neighbourCell != null ){
+                        anyValid = true;
+                        aliveNeighboursCount++;
+                        neighboursCount.put(neighbourCell.getColor(), neighboursCount.get(neighbourCell.getColor()) + 1);
+                    }
+                    if(anyValid) neighboursCountByColor.put(coordinate, neighboursCount);
                 }
                 if(!this.birthRules.contains(aliveNeighboursCount)) invalidCandidates.add(coordinate);
             }
@@ -96,7 +112,29 @@ public class Board {
         candidatesCoordinates.removeAll(invalidCandidates);
 
         for(Coordinate coordinate : candidatesCoordinates){
-            this.addCell(coordinate);
+
+            HashMap<CellColor, Integer> neighboursColors = neighboursCountByColor.get(coordinate);
+
+            CellColor finalColor = CellColor.WHITE;
+            int maxColorCount = 0;
+            int numberOfDraws = 0;
+            CellColor missingColor = null;
+
+            for(CellColor color : CellColor.values()){
+                if(neighboursColors.get(color) > maxColorCount){
+                    finalColor = color;
+                    maxColorCount = neighboursColors.get(color);
+                }
+                if(neighboursColors.get(color).equals(1)){
+                    numberOfDraws++;
+                }
+                if(neighboursColors.get(color).equals(0)) missingColor = color;
+            }
+
+            if(numberOfDraws == 3 && missingColor != null) finalColor = missingColor;
+
+            this.addCell(coordinate, finalColor);
+
         }
 
         for(Cell toBeKilled : dead){
@@ -117,7 +155,6 @@ public class Board {
         for(IDayEndObserver observer : this.dayEndObservers) observer.onDayEnd();
     }
 
-//    private void updateBounds()
 
     public void updateNeighbours(){
         for (Cell aliveCell : this.aliveCellsByPosition.values()) {
@@ -125,22 +162,27 @@ public class Board {
         }
     }
 
-    public void addCell(Coordinate coordinate){
-        Cell newCell = new Cell(coordinate, this);
+    public void addCell(Coordinate coordinate, CellColor color){
+        Cell newCell = new Cell(coordinate, this, color);
         this.aliveCellsByPosition.put(newCell.getCoordinate(), newCell);
     }
 
     public void removeCell(Coordinate coordinate){
-        this.aliveCellsByPosition.remove(coordinate);
-        this.tracesByPosition.put(coordinate, new Trace(coordinate, this));
+        if(this.aliveCellsByPosition.remove(coordinate) != null)
+            this.tracesByPosition.put(coordinate, new Trace(coordinate, this));
     }
 
-    public void setGlider(int gliderX, int gliderY){
-        this.addCell(new Coordinate(gliderX, gliderY));
-        this.addCell(new Coordinate(gliderX + 1, gliderY));
-        this.addCell(new Coordinate(gliderX + 2,gliderY));
-        this.addCell(new Coordinate(gliderX ,gliderY + 1));
-        this.addCell(new Coordinate(gliderX + 1,gliderY + 2));
+    private void setGlider(int gliderX, int gliderY, CellColor color){
+        this.addCell(new Coordinate(gliderX, gliderY), color);
+        this.addCell(new Coordinate(gliderX + 1, gliderY), color);
+        this.addCell(new Coordinate(gliderX + 2,gliderY), color);
+        this.addCell(new Coordinate(gliderX ,gliderY + 1), color);
+        this.addCell(new Coordinate(gliderX + 1,gliderY + 2), color);
+    }
+
+
+    public Collection<Cell> getCurrentState(){
+        return this.aliveCellsByPosition.values();
     }
 
     public void addDayEndObserver(IDayEndObserver observer){
