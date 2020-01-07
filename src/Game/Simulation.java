@@ -43,5 +43,4 @@ public class Simulation {
     }
 
     //TODO: map bounds
-
 }

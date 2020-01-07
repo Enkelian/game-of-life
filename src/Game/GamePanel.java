@@ -171,6 +171,12 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     }
 
     @Override
+    public void onClearBoard() {
+        this.board.clearBoard();
+        this.repaint();
+    }
+
+    @Override
     public void mouseClicked(MouseEvent mouseEvent) {
         this.drawErase(mouseEvent);
     }

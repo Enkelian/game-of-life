@@ -16,7 +16,7 @@ public class SidePanel extends JToolBar {
 
     private Coordinate size;
     private boolean isPaused;
-    private JButton pauseButton, drawErase, saveAs;
+    private JButton pauseButton, drawErase, saveAs, clearBoard;
     private JButton zoomIn, zoomOut;
     private Board board;
     private List<IButtonPressedObserver> observers;
@@ -42,6 +42,10 @@ public class SidePanel extends JToolBar {
         this.saveAs = new JButton("Save as");
         this.saveAs.addActionListener(e -> this.saveToFile());
         this.add(this.saveAs);
+
+        this.clearBoard = new JButton("Clear");
+        this.clearBoard.addActionListener(e -> this.clearBoard());
+        this.add(this.clearBoard);
 
         this.zoomIn = new JButton("Zoom in", new ImageIcon(ImageIO.read(new File("res\\plus.png"))));
         this.zoomIn.addActionListener(this::zoomPressed);
@@ -167,6 +171,10 @@ public class SidePanel extends JToolBar {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void clearBoard(){
+        for(IButtonPressedObserver observer : this.observers) observer.onClearBoard();
     }
 
     public void addObserver(IButtonPressedObserver observer){

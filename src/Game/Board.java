@@ -8,7 +8,7 @@ public class Board {
 
     private List<Integer> survivalRules;        //for Conway's only 2 and 3
     private List<Integer> birthRules;           //for Conway's only 3
-    private Coordinate lowerBond, upperBound;
+    private Coordinate lowerBound, upperBound;
     private HashMap<Coordinate, Cell> aliveCellsByPosition;
     private HashMap<Coordinate, Trace> tracesByPosition;
     private List<IDayEndObserver> dayEndObservers;
@@ -97,7 +97,7 @@ public class Board {
                 boolean anyValid = false;
                 for(Coordinate neighbour : coordinate.neighbours()){
                     Cell neighbourCell = this.getCellAt(neighbour);
-                    if(neighbourCell != null ){
+                    if(neighbourCell != null){
                         anyValid = true;
                         aliveNeighboursCount++;
                         neighboursCount.put(neighbourCell.getColor(), neighboursCount.get(neighbourCell.getColor()) + 1);
@@ -184,6 +184,8 @@ public class Board {
     public Collection<Cell> getCurrentState(){
         return this.aliveCellsByPosition.values();
     }
+
+    public void clearBoard(){ this.aliveCellsByPosition.clear(); }
 
     public void addDayEndObserver(IDayEndObserver observer){
         this.dayEndObservers.add(observer);

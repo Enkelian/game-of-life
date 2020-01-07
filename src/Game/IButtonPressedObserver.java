@@ -8,5 +8,5 @@ public interface IButtonPressedObserver {
     void onToggleTraces();
     void onToggleDraw();
     void onColorButtonClicked(CellColor color);
-
+    void onClearBoard();
 }
