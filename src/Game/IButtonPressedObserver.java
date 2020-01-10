@@ -9,4 +9,5 @@ public interface IButtonPressedObserver {
     void onToggleDraw();
     void onColorButtonClicked(CellColor color);
     void onClearBoard();
+    void onSliderChanged(int value);
 }

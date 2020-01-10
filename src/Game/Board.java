@@ -20,7 +20,10 @@ public class Board {
         this.aliveCellsByPosition = new HashMap<>();
         this.tracesByPosition = new HashMap<>();
         this.dayEndObservers = new ArrayList<>();
-        this.maxTraceAge = 30;
+        this.maxTraceAge = 255/5;
+
+        this.lowerBound = new Coordinate(Integer.MIN_VALUE, Integer.MIN_VALUE);
+        this.upperBound = new Coordinate(Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         this.survivalRules.add(2);
         this.survivalRules.add(3);
@@ -38,9 +41,9 @@ public class Board {
 
     public int getHeight(){ return this.upperBound.y + 1; }
 
-//    public Coordinate getUpperBound(){ return this.upperBound; }
-//
-//    public Coordinate getLowerBond(){ return this.lowerBond; }
+    public Coordinate getUpperBound(){ return this.upperBound; }
+
+    public Coordinate getLowerBond(){ return this.lowerBound; }
 
     public boolean containsBirthRule(int rule){ return this.birthRules.contains(rule); }
 
@@ -62,7 +65,9 @@ public class Board {
         return this.getCellAt(coordinate) != null;
     }
 
-    public Cell getCellAt(Coordinate coordinate){ return this.aliveCellsByPosition.get(coordinate); }
+    public Cell getCellAt(Coordinate coordinate){
+        return (coordinate.follows(this.lowerBound) && coordinate.precedes(this.upperBound)) ? this.aliveCellsByPosition.get(coordinate) : null;
+    }
 
     public int traceAgeAt(Coordinate coordinate){
         Trace traceHere = this.tracesByPosition.get(coordinate);
@@ -142,14 +147,7 @@ public class Board {
         }
         dead.clear();
 
-        List<Trace> tracesToBeRemoved = new ArrayList<>();
-
-        for(Trace trace : this.tracesByPosition.values()){
-            if(trace.getAge() >= this.maxTraceAge) tracesToBeRemoved.add(trace);
-        }
-
-        for(Trace trace : tracesToBeRemoved) this.tracesByPosition.remove(trace.getCoordinate());
-
+        this.removeInvalidTraces();
         this.updateNeighbours();
 
         for(IDayEndObserver observer : this.dayEndObservers) observer.onDayEnd();
@@ -180,12 +178,42 @@ public class Board {
         this.addCell(new Coordinate(gliderX + 1,gliderY + 2), color);
     }
 
+    public void setMaxTraceAge(int maxTraceAge){
+        this.maxTraceAge = maxTraceAge;
+        this.removeInvalidTraces();
+    }
+
+    private void removeInvalidTraces(){
+        List<Trace> tracesToBeRemoved = new ArrayList<>();
+
+        for(Trace trace : this.tracesByPosition.values()){
+            if(trace.getAge() >= this.maxTraceAge) tracesToBeRemoved.add(trace);
+        }
+
+        for(Trace trace : tracesToBeRemoved) this.tracesByPosition.remove(trace.getCoordinate());
+    }
 
     public Collection<Cell> getCurrentState(){
         return this.aliveCellsByPosition.values();
     }
 
-    public void clearBoard(){ this.aliveCellsByPosition.clear(); }
+    public void clearBoard(){
+        this.aliveCellsByPosition.clear();
+        this.tracesByPosition.clear();
+    }
+
+    public void removeCellWithoutTrace(Coordinate coordinate){
+        this.aliveCellsByPosition.remove(coordinate);
+    }
+
+    public void setRulesToConway(){
+        this.birthRules.clear();
+        this.birthRules.add(3);
+
+        this.survivalRules.clear();
+        this.survivalRules.add(2);
+        this.survivalRules.add(3);
+    }
 
     public void addDayEndObserver(IDayEndObserver observer){
         this.dayEndObservers.add(observer);
