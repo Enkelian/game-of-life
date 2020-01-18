@@ -35,7 +35,7 @@ public class SidePanel extends JToolBar {
         this.isPaused = false;
         this.setFloatable(false);
 
-        this.defaultCellColor = CellColor.WHITE;
+        this.defaultCellColor = CellColor.BLUE;
         this.conwayCheckBoxes = new ArrayList<>();
         this.allCheckBoxes = new ArrayList<>();
 
@@ -51,10 +51,6 @@ public class SidePanel extends JToolBar {
         this.saveAs.addActionListener(e -> this.saveToFile());
         this.add(this.saveAs);
 
-        this.clearBoard = new JButton("Clear board");
-        this.clearBoard.addActionListener(e -> this.clearBoard());
-        this.add(this.clearBoard);
-
         this.zoomIn = new JButton("Zoom in", new ImageIcon(ImageIO.read(new File("res\\plus.png")).getScaledInstance(50,50, Image.SCALE_SMOOTH)));
         this.zoomIn.addActionListener(this::zoomPressed);
         this.add(this.zoomIn);
@@ -62,6 +58,10 @@ public class SidePanel extends JToolBar {
         this.zoomOut = new JButton("Zoom out", new ImageIcon(ImageIO.read(new File("res\\minus.png")).getScaledInstance(50,50, Image.SCALE_SMOOTH)));
         this.zoomOut.addActionListener(this::zoomPressed);
         this.add(this.zoomOut);
+
+        this.clearBoard = new JButton("Clear board");
+        this.clearBoard.addActionListener(e -> this.clearBoard());
+        this.add(this.clearBoard);
 
         this.addDrawEraseButton();
         this.addColorButtons();
@@ -235,8 +235,9 @@ public class SidePanel extends JToolBar {
     }
 
     private void clearBoard(){
-        if(!this.isPaused) this.pausePressed();
-        for(IButtonPressedObserver observer : this.observers) observer.onClearBoard();
+        if(this.isPaused) {
+            for (IButtonPressedObserver observer : this.observers) observer.onClearBoard();
+        }
     }
 
     private void resetRules(){

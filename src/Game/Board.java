@@ -22,14 +22,15 @@ public class Board {
         this.dayEndObservers = new ArrayList<>();
         this.maxTraceAge = 255/5;
 
-        this.lowerBound = new Coordinate(Integer.MIN_VALUE, Integer.MIN_VALUE);
-        this.upperBound = new Coordinate(Integer.MAX_VALUE, Integer.MAX_VALUE);
+        int max = 1000000000;
+        this.lowerBound = new Coordinate(-max, -max);
+        this.upperBound = new Coordinate(max, max);
 
         this.survivalRules.add(2);
         this.survivalRules.add(3);
         this.birthRules.add(3);
 
-        this.setGlider(100, 50, CellColor.WHITE);
+        this.setGlider(100, 50, CellColor.BLUE);
         this.setGlider(30,30, CellColor.RED);
         this.setGlider(50,40, CellColor.GREEN);
         this.setGlider(70, 10, CellColor.ORANGE);
@@ -55,6 +56,10 @@ public class Board {
 
     public void addSurvivalRule(Integer rule){
         if(!this.containsSurvivalRule(rule)) this.survivalRules.add(rule);
+    }
+
+    public void changeColorAt(Coordinate coordinate, CellColor color){
+        this.getCellAt(coordinate).changeColor(color);
     }
 
     public void removeBirthRule(Integer rule){ this.birthRules.remove(rule); }
@@ -120,7 +125,7 @@ public class Board {
 
             HashMap<CellColor, Integer> neighboursColors = neighboursCountByColor.get(coordinate);
 
-            CellColor finalColor = CellColor.WHITE;
+            CellColor finalColor = CellColor.BLUE;
             int maxColorCount = 0;
             int numberOfDraws = 0;
             CellColor missingColor = null;
@@ -155,8 +160,10 @@ public class Board {
 
 
     public void updateNeighbours(){
-        for (Cell aliveCell : this.aliveCellsByPosition.values()) {
-            aliveCell.updateNeighboursCount();
+
+        for (Iterator<Cell> iterator = this.aliveCellsByPosition.values().iterator(); iterator.hasNext();){
+            Cell cell = iterator.next();
+            cell.updateNeighboursCount();
         }
     }
 
@@ -165,9 +172,16 @@ public class Board {
         this.aliveCellsByPosition.put(newCell.getCoordinate(), newCell);
     }
 
+    public CellColor traceColorAt(Coordinate coordinate){
+        return this.tracesByPosition.get(coordinate).getColor();
+    }
+
     public void removeCell(Coordinate coordinate){
+        Cell cellToBeRemoved = this.getCellAt(coordinate);
         if(this.aliveCellsByPosition.remove(coordinate) != null)
-            this.tracesByPosition.put(coordinate, new Trace(coordinate, this));
+//            this.tracesByPosition.put(coordinate, new Trace(coordinate, this));
+            this.tracesByPosition.put(coordinate, new Trace(coordinate, cellToBeRemoved.getColor(), this));
+
     }
 
     private void setGlider(int gliderX, int gliderY, CellColor color){
@@ -204,15 +218,6 @@ public class Board {
 
     public void removeCellWithoutTrace(Coordinate coordinate){
         this.aliveCellsByPosition.remove(coordinate);
-    }
-
-    public void setRulesToConway(){
-        this.birthRules.clear();
-        this.birthRules.add(3);
-
-        this.survivalRules.clear();
-        this.survivalRules.add(2);
-        this.survivalRules.add(3);
     }
 
     public void addDayEndObserver(IDayEndObserver observer){

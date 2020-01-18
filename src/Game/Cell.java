@@ -11,7 +11,7 @@ public class Cell {
         this.coordinate = coordinate;
         this.board = board;
         this.neighboursCount = 0;
-        this.color = CellColor.WHITE;
+        this.color = CellColor.BLUE;
     }
 
     public Cell(Coordinate coordinate, Board board, CellColor color){
@@ -31,6 +31,9 @@ public class Cell {
         return "coordinate='" + this.coordinate + '\'' + ", color='" + this.color + '\'';
     }
 
+    public void changeColor(CellColor color){
+        this.color = color;
+    }
 
     public CellColor getColor(){ return this.color; }
 

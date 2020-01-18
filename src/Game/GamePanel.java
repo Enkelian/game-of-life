@@ -19,7 +19,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     private boolean draw;
     private CellColor activeColor;
     private int delay = 100;
-    private final int colorConstant = 255;
+    private final int colorConstant = 200;
     private int traceColorMultiplier;
     private int traceLength;
 
@@ -34,7 +34,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.cellSize = this.allowedCellSizes.get(this.cellSizeIdx);
         this.showTraces = true;
         this.draw = true;
-        this.activeColor = CellColor.WHITE;
+        this.activeColor = CellColor.BLUE;
         this.focusLowerBound = new Coordinate(0,0);
         this.focusUpperBound = new Coordinate(this.bound.x/this.cellSize, this.bound.y/this.cellSize);
         this.setFocusable(true);
@@ -56,8 +56,8 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                 Coordinate currentCoordinate = new Coordinate(x, y);
                 if(this.board.isAliveAt(currentCoordinate)) {
                     switch (this.board.getCellAt(currentCoordinate).getColor()){
-                        case WHITE:
-                            g.setColor(Color.WHITE);
+                        case BLUE:
+                            g.setColor(Color.BLUE);
                             break;
                         case RED:
                             g.setColor(Color.RED);
@@ -74,7 +74,22 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                     g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
                 }
                 else if(this.showTraces && this.board.traceAgeAt(currentCoordinate) != -1){
-                    g.setColor(new Color(0,0,255 - this.board.traceAgeAt(currentCoordinate)*this.traceColorMultiplier));
+                    int difference = this.board.traceAgeAt(currentCoordinate)*this.traceColorMultiplier;
+                    switch (this.board.traceColorAt(currentCoordinate)){
+                        case BLUE:
+                            g.setColor(new Color(0,0,200 - difference));
+                            break;
+                        case RED:
+                            g.setColor(new Color(200 - difference,0, 0));
+                            break;
+                        case GREEN:
+                            g.setColor(new Color(0,200 - difference,0));
+                            break;
+                        case ORANGE:
+                            g.setColor(new Color(255 - difference,255 - difference, 0));
+                        default:
+                            break;
+                    }
                     g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
                 }
                 else {
@@ -125,7 +140,6 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     @Override
     public void onPausePressed() {
         this.pause();
-        this.board.updateNeighbours();
     }
 
     private List<Integer> setAllowedCellSizes(){
@@ -245,7 +259,10 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.requestFocus();
         if(this.running) return;
         Coordinate coordinate = new Coordinate((mouseEvent.getX() / this.cellSize) + this.focusLowerBound.x, (mouseEvent.getY() / this.cellSize) + this.focusLowerBound.y);
-        if (this.draw) board.addCell(coordinate, this.activeColor);
+        if (this.draw){
+            if(this.board.isAliveAt(coordinate)) this.board.changeColorAt(coordinate, this.activeColor);
+            else board.addCell(coordinate, this.activeColor);
+        }
         else this.board.removeCellWithoutTrace(coordinate);
         this.repaint();
     }

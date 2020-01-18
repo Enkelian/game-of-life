@@ -1,7 +1,7 @@
 package Game;
 
 public enum CellColor {
-    WHITE,
+    BLUE,
     RED,
     GREEN,
     ORANGE;
@@ -9,8 +9,8 @@ public enum CellColor {
     @Override
     public String toString() {
         switch (this){
-            case WHITE:
-                return "white";
+            case BLUE:
+                return "blue";
             case RED:
                 return "red";
             case GREEN:
