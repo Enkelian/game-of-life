@@ -82,78 +82,81 @@ public class Board {
 
     public void day(){
 
-        ArrayList <Cell> dead = new ArrayList<>();
-        Collection<Cell> aliveCells = this.aliveCellsByPosition.values();
+        if(this.survivalRules.isEmpty() && this.birthRules.isEmpty()) this.aliveCellsByPosition.clear();
+        else {
+            ArrayList<Cell> dead = new ArrayList<>();
+            Collection<Cell> aliveCells = this.aliveCellsByPosition.values();
 
-        for(Cell cell : aliveCells){
-            if(!this.survivalRules.contains(cell.getNeighboursCount())) dead.add(cell);
-        }
+            for (Cell cell : aliveCells) {
+                if (!this.survivalRules.contains(cell.getNeighboursCount())) dead.add(cell);
+            }
 
-        Set<Coordinate> candidatesCoordinates = new LinkedHashSet<>();
+            Set<Coordinate> candidatesCoordinates = new LinkedHashSet<>();
 
-        for(Cell cell : aliveCells) {
-            candidatesCoordinates.addAll(cell.getCoordinate().neighbours());
-        }
+            for (Cell cell : aliveCells) {
+                candidatesCoordinates.addAll(cell.getCoordinate().neighbours());
+            }
 
-        ArrayList<Coordinate> invalidCandidates = new ArrayList<>();
-        HashMap<Coordinate, HashMap<CellColor, Integer>> neighboursCountByColor = new HashMap<>();
-
-        for(Coordinate coordinate : candidatesCoordinates){
-            if(this.isAliveAt(coordinate)) invalidCandidates.add(coordinate);
-            else{
-                int aliveNeighboursCount = 0;
-                HashMap<CellColor, Integer> neighboursCount = new HashMap<>();
-                for(CellColor color: CellColor.values()) neighboursCount.put(color, 0);
-                boolean anyValid = false;
-                for(Coordinate neighbour : coordinate.neighbours()){
-                    Cell neighbourCell = this.getCellAt(neighbour);
-                    if(neighbourCell != null){
-                        anyValid = true;
-                        aliveNeighboursCount++;
-                        neighboursCount.put(neighbourCell.getColor(), neighboursCount.get(neighbourCell.getColor()) + 1);
+            ArrayList<Coordinate> invalidCandidates = new ArrayList<>();
+            HashMap<Coordinate, HashMap<CellColor, Integer>> neighboursCountByColor = new HashMap<>();
+            for (Coordinate coordinate : candidatesCoordinates) {
+                if (this.isAliveAt(coordinate)) invalidCandidates.add(coordinate);
+                else {
+                    int aliveNeighboursCount = 0;
+                    HashMap<CellColor, Integer> neighboursCount = new HashMap<>();
+                    for (CellColor color : CellColor.values()) neighboursCount.put(color, 0);
+                    boolean anyValid = false;
+                    for (Coordinate neighbour : coordinate.neighbours()) {
+                        Cell neighbourCell = this.getCellAt(neighbour);
+                        if (neighbourCell != null) {
+                            anyValid = true;
+                            aliveNeighboursCount++;
+                            neighboursCount.put(neighbourCell.getColor(), neighboursCount.get(neighbourCell.getColor()) + 1);
+                        }
+                        if (anyValid) neighboursCountByColor.put(coordinate, neighboursCount);
                     }
-                    if(anyValid) neighboursCountByColor.put(coordinate, neighboursCount);
+                    if (!this.birthRules.contains(aliveNeighboursCount)) invalidCandidates.add(coordinate);
                 }
-                if(!this.birthRules.contains(aliveNeighboursCount)) invalidCandidates.add(coordinate);
+
             }
 
-        }
+            candidatesCoordinates.removeAll(invalidCandidates);
 
-        candidatesCoordinates.removeAll(invalidCandidates);
+            for (Coordinate coordinate : candidatesCoordinates) {
 
-        for(Coordinate coordinate : candidatesCoordinates){
+                HashMap<CellColor, Integer> neighboursColors = neighboursCountByColor.get(coordinate);
 
-            HashMap<CellColor, Integer> neighboursColors = neighboursCountByColor.get(coordinate);
+                CellColor finalColor = CellColor.BLUE;
+                int maxColorCount = 0;
+                int numberOfDraws = 0;
+                CellColor missingColor = null;
 
-            CellColor finalColor = CellColor.BLUE;
-            int maxColorCount = 0;
-            int numberOfDraws = 0;
-            CellColor missingColor = null;
-
-            for(CellColor color : CellColor.values()){
-                if(neighboursColors.get(color) > maxColorCount){
-                    finalColor = color;
-                    maxColorCount = neighboursColors.get(color);
+                for (CellColor color : CellColor.values()) {
+                    if (neighboursColors.get(color) > maxColorCount) {
+                        finalColor = color;
+                        maxColorCount = neighboursColors.get(color);
+                    }
+                    if (neighboursColors.get(color).equals(1)) {
+                        numberOfDraws++;
+                    }
+                    if (neighboursColors.get(color).equals(0)) missingColor = color;
                 }
-                if(neighboursColors.get(color).equals(1)){
-                    numberOfDraws++;
-                }
-                if(neighboursColors.get(color).equals(0)) missingColor = color;
+
+                if (numberOfDraws == 3 && missingColor != null) finalColor = missingColor;
+
+                this.addCell(coordinate, finalColor);
+
             }
 
-            if(numberOfDraws == 3 && missingColor != null) finalColor = missingColor;
+            for (Cell toBeKilled : dead) {
+                this.removeCell(toBeKilled.getCoordinate());
+            }
 
-            this.addCell(coordinate, finalColor);
+            dead.clear();
+            this.updateNeighbours();
 
         }
-
-        for(Cell toBeKilled : dead){
-            this.removeCell(toBeKilled.getCoordinate());
-        }
-        dead.clear();
-
         this.removeInvalidTraces();
-        this.updateNeighbours();
 
         for(IDayEndObserver observer : this.dayEndObservers) observer.onDayEnd();
     }
