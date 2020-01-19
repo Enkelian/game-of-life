@@ -173,6 +173,7 @@ public class Board {
     public void addCell(Coordinate coordinate, CellColor color){
         Cell newCell = new Cell(coordinate, this, color);
         this.aliveCellsByPosition.put(newCell.getCoordinate(), newCell);
+        this.updateNeighbours();
     }
 
     public CellColor traceColorAt(Coordinate coordinate){
