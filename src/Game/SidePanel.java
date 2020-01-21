@@ -12,7 +12,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SidePanel extends JToolBar {
+public class SidePanel extends JToolBar implements IDayEndObserver {
 
     private Coordinate size;
     private boolean isPaused;
@@ -25,6 +25,7 @@ public class SidePanel extends JToolBar {
     private CellColor defaultCellColor;
     private ArrayList<JCheckBox> conwayCheckBoxes;
     private ArrayList<JCheckBox> allCheckBoxes;
+    private ArrayList<Integer> changedBirthRules, changedSurvivalRules;
 
     public SidePanel (int height, Board board) throws IOException {
         this.setOrientation(VERTICAL);
@@ -74,6 +75,11 @@ public class SidePanel extends JToolBar {
         this.add(resetRules);
 
         this.observers = new ArrayList<>();
+
+        this.board.addDayEndObserver(this);
+
+        this.changedBirthRules = new ArrayList<>();
+        this.changedSurvivalRules = new ArrayList<>();
 
     }
 
@@ -151,8 +157,9 @@ public class SidePanel extends JToolBar {
     private void birthRuleAction(ActionEvent e){
         JCheckBox birthRule = (JCheckBox) e.getSource();
         int rule = Integer.parseInt(birthRule.getText());
-        if(birthRule.isSelected()) this.board.addBirthRule(rule);
-        else this.board.removeBirthRule(rule);
+        if(birthRule.isSelected()) this.changedBirthRules.add(rule);
+        else this.changedBirthRules.add(-rule);
+        if(this.isPaused) this.updateRules();
     }
 
     private JPanel addSurvivalRulesCheckBoxes(){
@@ -171,8 +178,9 @@ public class SidePanel extends JToolBar {
     private void survivalRuleAction(ActionEvent e){
         JCheckBox survivalRule = (JCheckBox) e.getSource();
         int rule = Integer.parseInt(survivalRule.getText());
-        if(survivalRule.isSelected()) this.board.addSurvivalRule(rule);
-        else this.board.removeSurvivalRule(rule);
+        if(survivalRule.isSelected()) this.changedSurvivalRules.add(rule);
+        else this.changedSurvivalRules.add(-rule);
+        if(this.isPaused) this.updateRules();
     }
 
     private void pausePressed(){
@@ -235,9 +243,7 @@ public class SidePanel extends JToolBar {
     }
 
     private void clearBoard(){
-        if(this.isPaused) {
-            for (IButtonPressedObserver observer : this.observers) observer.onClearBoard();
-        }
+        for (IButtonPressedObserver observer : this.observers) observer.onClearBoard();
     }
 
     private void resetRules(){
@@ -258,5 +264,23 @@ public class SidePanel extends JToolBar {
 
     public void removeObserver(IButtonPressedObserver observer){
         this.observers.remove(observer);
+    }
+
+    public void updateRules(){
+        for(Integer rule: this.changedBirthRules){
+            if(rule>0) this.board.addBirthRule(rule);
+            else this.board.removeBirthRule(-rule);
+        }
+        this.changedBirthRules.clear();
+        for(Integer rule: this.changedSurvivalRules){
+            if(rule>0) this.board.addSurvivalRule(rule);
+            else this.board.removeSurvivalRule(-rule);
+        }
+        this.changedSurvivalRules.clear();
+    }
+
+    @Override
+    public void onDayEnd() {
+        this.updateRules();
     }
 }

@@ -175,9 +175,11 @@ public class Board {
         this.aliveCellsByPosition.put(newCell.getCoordinate(), newCell);
     }
 
-    public CellColor traceColorAt(Coordinate coordinate){
+    public CellColor getTraceColorAt(Coordinate coordinate){
         return this.tracesByPosition.get(coordinate).getColor();
     }
+
+    public CellColor getCellColorAt(Coordinate coordinate){ return this.getCellAt(coordinate).getColor(); }
 
     public void removeCell(Coordinate coordinate){
         Cell cellToBeRemoved = this.getCellAt(coordinate);

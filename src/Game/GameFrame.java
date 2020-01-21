@@ -26,6 +26,7 @@ public class GameFrame extends JFrame {
         this.contents.add(this.sidePanel, BorderLayout.LINE_START);
         this.setContentPane(this.contents);
         this.pack();
+        this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
         this.gamePanel.init();

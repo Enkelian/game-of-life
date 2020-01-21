@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.*;
 
-public class GamePanel extends JPanel implements Runnable, IButtonPressedObserver, KeyListener, MouseListener, MouseMotionListener {
+public class GamePanel extends JPanel implements Runnable, IButtonPressedObserver, KeyListener, MouseListener, MouseMotionListener, IDayEndObserver {
 
     private Board board;
     private Coordinate bound;
@@ -20,9 +20,9 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     private CellColor activeColor;
     private int delay = 100;
     private final int colorConstant = 200;
-    private int traceColorMultiplier;
+    private int traceColorMultiplier, nextTraceColorMultiplier;
     private int traceLength;
-
+    private boolean clear;
     private Coordinate focusLowerBound, focusUpperBound;
 
     public GamePanel(Board board){
@@ -41,6 +41,8 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
         this.addKeyListener(this);
+        this.board.addDayEndObserver(this);
+        this.clear = false;
     }
 
     @Override
@@ -54,9 +56,9 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                 int rectPosY = (y - (this.focusLowerBound.y)) * this.cellSize;
 
                 Coordinate currentCoordinate = new Coordinate(x, y);
-//                if(!(currentCoordinate.precedes(this.board.getUpperBound()) && currentCoordinate.follows(this.board.getLowerBond()))) continue;
-                if(this.board.getCellAt(currentCoordinate) != null) {
-                    switch (this.board.getCellAt(currentCoordinate).getColor()){
+                if(!(currentCoordinate.precedes(this.board.getUpperBound()) && currentCoordinate.follows(this.board.getLowerBond()))) continue;
+                if(this.board.isAliveAt(currentCoordinate)) {
+                    switch (this.board.getCellColorAt(currentCoordinate)){
                         case BLUE:
                             g.setColor(Color.BLUE);
                             break;
@@ -71,14 +73,13 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                             break;
                         default:
                             g.setColor(Color.BLACK);
-                            break;
                     }
 
                     g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
                 }
                 else if(this.showTraces && this.board.traceAgeAt(currentCoordinate) != -1){
                     int difference = this.board.traceAgeAt(currentCoordinate)*this.traceColorMultiplier;
-                    switch (this.board.traceColorAt(currentCoordinate)){
+                    switch (this.board.getTraceColorAt(currentCoordinate)){
                         case BLUE:
                             g.setColor(new Color(0,0,200 - difference));
                             break;
@@ -104,8 +105,12 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
 
     }
 
-    public void setTraceColorMultiplier(int traceColorMultiplier){
-        this.traceColorMultiplier = traceColorMultiplier;
+    public void setNextTraceColorMultiplier(int nextTraceColorMultiplier){
+        this.nextTraceColorMultiplier = nextTraceColorMultiplier;
+    }
+
+    public void setTraceColorMultiplier(){
+        this.traceColorMultiplier = this.nextTraceColorMultiplier;
         this.traceLength = colorConstant / traceColorMultiplier;
         this.board.setMaxTraceAge(traceLength);
     }
@@ -198,13 +203,13 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
 
     @Override
     public void onClearBoard() {
-        this.board.clearBoard();
-        this.repaint();
+        this.clear = true;
+        if(!this.running) this.executeClear();
     }
 
     @Override
     public void onSliderChanged(int value) {
-        this.setTraceColorMultiplier(21-value);
+        this.setNextTraceColorMultiplier(21-value);
     }
 
     @Override
@@ -289,5 +294,17 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     @Override
     public void mouseMoved(MouseEvent mouseEvent) {
 
+    }
+
+    private void executeClear(){
+        this.board.clearBoard();
+        this.repaint();
+        this.clear = !this.clear;
+    }
+
+    @Override
+    public void onDayEnd() {
+        this.setTraceColorMultiplier();
+        if(this.clear) this.executeClear();
     }
 }
