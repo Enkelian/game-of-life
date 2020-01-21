@@ -244,6 +244,7 @@ public class SidePanel extends JToolBar implements IDayEndObserver {
 
     private void clearBoard(){
         for (IButtonPressedObserver observer : this.observers) observer.onClearBoard();
+        this.pausePressed();
     }
 
     private void resetRules(){
