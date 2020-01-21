@@ -61,57 +61,63 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
 
                 if(!(currentCoordinate.precedes(this.board.getUpperBound()) && currentCoordinate.follows(this.board.getLowerBond()))) continue;
 
-                if(cell != null) {
-                    switch (cell.getColor()){
-                        case BLUE:
-                            g.setColor(Color.BLUE);
-                            break;
-                        case RED:
-                            g.setColor(Color.RED);
-                            break;
-                        case GREEN:
-                            g.setColor(Color.GREEN);
-                            break;
-                        case ORANGE:
-                            g.setColor(Color.ORANGE);
-                            break;
-                        default:
-                            g.setColor(Color.BLACK);
-                            break;
-                    }
-                    g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
-                }
+                if(cell != null) this.paintCell(cell, g, rectPosX, rectPosY);
                 else{
                     Trace trace = this.board.getTraceAt(currentCoordinate);
-                    if(this.showTraces && trace != null){
-                        int difference = trace.getAge()*this.traceColorMultiplier;
-                        switch (trace.getColor()){
-                            case BLUE:
-                                g.setColor(new Color(0,0,200 - difference));
-                                break;
-                            case RED:
-                                g.setColor(new Color(200 - difference,0, 0));
-                                break;
-                            case GREEN:
-                                g.setColor(new Color(0,200 - difference,0));
-                                break;
-                            case ORANGE:
-                                g.setColor(new Color(255 - difference,255 - difference, 0));
-                                break;
-                            default:
-                                break;
-                        }
-                        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
-                    }
-                    else {
-                        g.setColor(Color.BLACK);
-                        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
-                    }
+                    if(this.showTraces && trace != null) this.paintTrace(trace, g, rectPosX, rectPosY);
+                    else this.paintEmptyCell(g, rectPosX, rectPosY);
                 }
 
             }
         }
 
+    }
+
+    private void paintEmptyCell(Graphics g, int rectPosX, int rectPosY){
+        g.setColor(Color.BLACK);
+        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
+    }
+
+    private void paintCell(Cell cell, Graphics g, int rectPosX, int rectPosY){
+        switch (cell.getColor()){
+            case BLUE:
+                g.setColor(Color.BLUE);
+                break;
+            case RED:
+                g.setColor(Color.RED);
+                break;
+            case GREEN:
+                g.setColor(Color.GREEN);
+                break;
+            case ORANGE:
+                g.setColor(Color.ORANGE);
+                break;
+            default:
+                g.setColor(Color.BLACK);
+                break;
+        }
+        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
+    }
+
+    private void paintTrace(Trace trace, Graphics g, int rectPosX, int rectPosY){
+        int difference = trace.getAge()*this.traceColorMultiplier;
+        switch (trace.getColor()){
+            case BLUE:
+                g.setColor(new Color(0,0,200 - difference));
+                break;
+            case RED:
+                g.setColor(new Color(200 - difference,0, 0));
+                break;
+            case GREEN:
+                g.setColor(new Color(0,200 - difference,0));
+                break;
+            case ORANGE:
+                g.setColor(new Color(255 - difference,255 - difference, 0));
+                break;
+            default:
+                break;
+        }
+        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
     }
 
     public void setNextTraceColorMultiplier(int nextTraceColorMultiplier){
@@ -289,9 +295,9 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         if (this.draw){
             if(this.board.isAliveAt(coordinate)) this.board.changeColorAt(coordinate, this.activeColor);
             else board.addCell(coordinate, this.activeColor);
-            this.board.updateNeighbours();
         }
         else this.board.removeCellWithoutTrace(coordinate);
+        this.board.updateNeighbours();
         this.repaint();
     }
 
