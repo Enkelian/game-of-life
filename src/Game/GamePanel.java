@@ -43,6 +43,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.addKeyListener(this);
         this.board.addDayEndObserver(this);
         this.clear = false;
+
     }
 
     @Override
@@ -56,9 +57,12 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                 int rectPosY = (y - (this.focusLowerBound.y)) * this.cellSize;
 
                 Coordinate currentCoordinate = new Coordinate(x, y);
+                Cell cell = this.board.getCellAt(currentCoordinate);
+
                 if(!(currentCoordinate.precedes(this.board.getUpperBound()) && currentCoordinate.follows(this.board.getLowerBond()))) continue;
-                if(this.board.isAliveAt(currentCoordinate)) {
-                    switch (this.board.getCellColorAt(currentCoordinate)){
+
+                if(cell != null) {
+                    switch (cell.getColor()){
                         case BLUE:
                             g.setColor(Color.BLUE);
                             break;
@@ -73,33 +77,38 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                             break;
                         default:
                             g.setColor(Color.BLACK);
+                            break;
                     }
+                    g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
+                }
+                else{
+                    Trace trace = this.board.getTraceAt(currentCoordinate);
+                    if(this.showTraces && trace != null){
+                        int difference = trace.getAge()*this.traceColorMultiplier;
+                        switch (trace.getColor()){
+                            case BLUE:
+                                g.setColor(new Color(0,0,200 - difference));
+                                break;
+                            case RED:
+                                g.setColor(new Color(200 - difference,0, 0));
+                                break;
+                            case GREEN:
+                                g.setColor(new Color(0,200 - difference,0));
+                                break;
+                            case ORANGE:
+                                g.setColor(new Color(255 - difference,255 - difference, 0));
+                                break;
+                            default:
+                                break;
+                        }
+                        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
+                    }
+                    else {
+                        g.setColor(Color.BLACK);
+                        g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
+                    }
+                }
 
-                    g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
-                }
-                else if(this.showTraces && this.board.traceAgeAt(currentCoordinate) != -1){
-                    int difference = this.board.traceAgeAt(currentCoordinate)*this.traceColorMultiplier;
-                    switch (this.board.getTraceColorAt(currentCoordinate)){
-                        case BLUE:
-                            g.setColor(new Color(0,0,200 - difference));
-                            break;
-                        case RED:
-                            g.setColor(new Color(200 - difference,0, 0));
-                            break;
-                        case GREEN:
-                            g.setColor(new Color(0,200 - difference,0));
-                            break;
-                        case ORANGE:
-                            g.setColor(new Color(255 - difference,255 - difference, 0));
-                        default:
-                            break;
-                    }
-                    g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
-                }
-                else {
-                    g.setColor(Color.BLACK);
-                    g.fillRect(rectPosX, rectPosY, this.cellSize, this.cellSize);
-                }
             }
         }
 
@@ -123,6 +132,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     }
 
     public synchronized boolean pause(){
+        this.repaint();
         return this.running = !this.running;
     }
 
@@ -192,6 +202,8 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     public void onToggleTraces() {
         this.showTraces = !this.showTraces;
     }
+
+
 
     @Override
     public void onToggleDraw(){ this.draw = !this.draw; }
@@ -301,6 +313,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.repaint();
         this.clear = !this.clear;
     }
+
 
     @Override
     public void onDayEnd() {

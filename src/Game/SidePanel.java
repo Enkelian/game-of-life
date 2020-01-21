@@ -111,7 +111,7 @@ public class SidePanel extends JToolBar implements IDayEndObserver {
 
     private void addShowTracesCheckBox(){
         JCheckBox showTraces = new JCheckBox("Show traces", true);
-        showTraces.setBorder(BorderFactory.createEmptyBorder(15,3,10,3));
+        showTraces.setBorder(BorderFactory.createEmptyBorder(10,3,5,3));
         showTraces.addActionListener( e -> this.toggleTraces());
         this.add(showTraces);
     }
@@ -244,7 +244,7 @@ public class SidePanel extends JToolBar implements IDayEndObserver {
 
     private void clearBoard(){
         for (IButtonPressedObserver observer : this.observers) observer.onClearBoard();
-        this.pausePressed();
+        if(!this.isPaused) this.pausePressed();
     }
 
     private void resetRules(){

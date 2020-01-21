@@ -91,76 +91,70 @@ public class Board {
                 if (!this.survivalRules.contains(cell.getNeighboursCount())) dead.add(cell);
             }
 
-            Set<Coordinate> candidatesCoordinates = new LinkedHashSet<>();
+            Set<Coordinate> toBeBornCoordinates = new LinkedHashSet<>();
+            HashMap<Coordinate, HashMap<CellColor, Integer>> neighboursCountByColor = new HashMap<>();
 
             for (Cell cell : aliveCells) {
-                candidatesCoordinates.addAll(cell.getCoordinate().neighbours());
-            }
-
-            ArrayList<Coordinate> invalidCandidates = new ArrayList<>();
-            HashMap<Coordinate, HashMap<CellColor, Integer>> neighboursCountByColor = new HashMap<>();
-            for (Coordinate coordinate : candidatesCoordinates) {
-                if (this.isAliveAt(coordinate)) invalidCandidates.add(coordinate);
-                else {
-                    int aliveNeighboursCount = 0;
-                    HashMap<CellColor, Integer> neighboursCount = new HashMap<>();
-                    for (CellColor color : CellColor.values()) neighboursCount.put(color, 0);
-                    boolean anyValid = false;
-                    for (Coordinate neighbour : coordinate.neighbours()) {
-                        Cell neighbourCell = this.getCellAt(neighbour);
-                        if (neighbourCell != null) {
-                            anyValid = true;
-                            aliveNeighboursCount++;
-                            neighboursCount.put(neighbourCell.getColor(), neighboursCount.get(neighbourCell.getColor()) + 1);
+                for (Coordinate candidateCoordinate : cell.getCoordinate().neighbours()) {
+                    if (!isAliveAt(candidateCoordinate)) {
+                        int aliveNeighboursCount = 0;
+                        HashMap<CellColor, Integer> neighboursCount = new HashMap<>();
+                        for (CellColor color : CellColor.values()) neighboursCount.put(color, 0);
+                        boolean anyValid = false;
+                        for (Coordinate neighbour : candidateCoordinate.neighbours()) {
+                            Cell neighbourCell = this.getCellAt(neighbour);
+                            if (neighbourCell != null) {
+                                anyValid = true;
+                                aliveNeighboursCount++;
+                                neighboursCount.put(neighbourCell.getColor(), neighboursCount.get(neighbourCell.getColor()) + 1);
+                            }
+                            if (anyValid) neighboursCountByColor.put(candidateCoordinate, neighboursCount);
                         }
-                        if (anyValid) neighboursCountByColor.put(coordinate, neighboursCount);
+                        if (this.birthRules.contains(aliveNeighboursCount)) toBeBornCoordinates.add(candidateCoordinate);
                     }
-                    if (!this.birthRules.contains(aliveNeighboursCount)) invalidCandidates.add(coordinate);
                 }
-
             }
 
-            candidatesCoordinates.removeAll(invalidCandidates);
+            if(!this.birthRules.isEmpty()) {
+                for (Coordinate coordinate : toBeBornCoordinates) {
 
-            for (Coordinate coordinate : candidatesCoordinates) {
+                    HashMap<CellColor, Integer> neighboursColors = neighboursCountByColor.get(coordinate);
 
-                HashMap<CellColor, Integer> neighboursColors = neighboursCountByColor.get(coordinate);
+                    CellColor finalColor = CellColor.BLUE;
+                    int maxColorCount = 0;
+                    int numberOfDraws = 0;
+                    CellColor missingColor = null;
 
-                CellColor finalColor = CellColor.BLUE;
-                int maxColorCount = 0;
-                int numberOfDraws = 0;
-                CellColor missingColor = null;
-
-                for (CellColor color : CellColor.values()) {
-                    if (neighboursColors.get(color) > maxColorCount) {
-                        finalColor = color;
-                        maxColorCount = neighboursColors.get(color);
+                    for (CellColor color : CellColor.values()) {
+                        if (neighboursColors.get(color) > maxColorCount) {
+                            finalColor = color;
+                            maxColorCount = neighboursColors.get(color);
+                        }
+                        if (neighboursColors.get(color).equals(1)) {
+                            numberOfDraws++;
+                        }
+                        if (neighboursColors.get(color).equals(0)) missingColor = color;
                     }
-                    if (neighboursColors.get(color).equals(1)) {
-                        numberOfDraws++;
-                    }
-                    if (neighboursColors.get(color).equals(0)) missingColor = color;
+
+                    if (numberOfDraws == 3 && missingColor != null) finalColor = missingColor;
+
+                    this.addCell(coordinate, finalColor);
+
                 }
-
-                if (numberOfDraws == 3 && missingColor != null) finalColor = missingColor;
-
-                this.addCell(coordinate, finalColor);
-
             }
 
             for (Cell toBeKilled : dead) {
                 this.removeCell(toBeKilled.getCoordinate());
             }
 
+            toBeBornCoordinates.clear();
             dead.clear();
-            this.updateNeighbours();
 
         }
         this.removeInvalidTraces();
-
+        this.updateNeighbours();
         for(IDayEndObserver observer : this.dayEndObservers) observer.onDayEnd();
     }
-
 
     public void updateNeighbours(){
 
@@ -175,11 +169,20 @@ public class Board {
         this.aliveCellsByPosition.put(newCell.getCoordinate(), newCell);
     }
 
+    public boolean isTraceAt(Coordinate coordinate){
+        return this.tracesByPosition.get(coordinate) != null;
+    }
+
+    public Trace getTraceAt(Coordinate coordinate){
+        return (coordinate.follows(this.lowerBound) && coordinate.precedes(this.upperBound)) ? this.tracesByPosition.get(coordinate) : null;
+    }
+
     public CellColor getTraceColorAt(Coordinate coordinate){
         return this.tracesByPosition.get(coordinate).getColor();
     }
 
-    public CellColor getCellColorAt(Coordinate coordinate){ return this.getCellAt(coordinate).getColor(); }
+    public CellColor getCellColorAt(Coordinate coordinate){
+        return this.getCellAt(coordinate).getColor(); }
 
     public void removeCell(Coordinate coordinate){
         Cell cellToBeRemoved = this.getCellAt(coordinate);
