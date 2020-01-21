@@ -54,7 +54,8 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                 int rectPosY = (y - (this.focusLowerBound.y)) * this.cellSize;
 
                 Coordinate currentCoordinate = new Coordinate(x, y);
-                if(this.board.isAliveAt(currentCoordinate)) {
+//                if(!(currentCoordinate.precedes(this.board.getUpperBound()) && currentCoordinate.follows(this.board.getLowerBond()))) continue;
+                if(this.board.getCellAt(currentCoordinate) != null) {
                     switch (this.board.getCellAt(currentCoordinate).getColor()){
                         case BLUE:
                             g.setColor(Color.BLUE);
@@ -67,7 +68,9 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                             break;
                         case ORANGE:
                             g.setColor(Color.ORANGE);
+                            break;
                         default:
+                            g.setColor(Color.BLACK);
                             break;
                     }
 
@@ -250,6 +253,13 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                 this.focusUpperBound = this.focusUpperBound.subtract(unitRight);
                 this.focusLowerBound = this.focusLowerBound.subtract(unitRight);
                 break;
+            case KeyEvent.VK_ADD:
+                this.onZoomInPressed();
+                break;
+            case KeyEvent.VK_SUBTRACT:
+                this.onZoomOutPressed();
+                break;
+
         }
 
         if(!this.running) this.repaint();
@@ -262,6 +272,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         if (this.draw){
             if(this.board.isAliveAt(coordinate)) this.board.changeColorAt(coordinate, this.activeColor);
             else board.addCell(coordinate, this.activeColor);
+            this.board.updateNeighbours();
         }
         else this.board.removeCellWithoutTrace(coordinate);
         this.repaint();
