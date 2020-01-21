@@ -67,6 +67,7 @@ public class SidePanel extends JToolBar implements IDayEndObserver {
         this.addDrawEraseButton();
         this.addColorButtons();
         this.addShowTracesCheckBox();
+        this.addShowGridCheckBox();
         this.addTracesLengthSlider();
         this.addRulesCheckBoxes();
 
@@ -111,13 +112,24 @@ public class SidePanel extends JToolBar implements IDayEndObserver {
 
     private void addShowTracesCheckBox(){
         JCheckBox showTraces = new JCheckBox("Show traces", true);
-        showTraces.setBorder(BorderFactory.createEmptyBorder(15,3,10,3));
+        showTraces.setBorder(BorderFactory.createEmptyBorder(10,3,0,3));
         showTraces.addActionListener( e -> this.toggleTraces());
         this.add(showTraces);
     }
 
     private void toggleTraces(){
         for(IButtonPressedObserver observer : this.observers) observer.onToggleTraces();
+    }
+
+    private void addShowGridCheckBox(){
+        JCheckBox showGrid = new JCheckBox("Show grid", false);
+        showGrid.setBorder(BorderFactory.createEmptyBorder(5,3,5,3));
+        showGrid.addActionListener( e -> this.toggleShowGrid());
+        this.add(showGrid);
+    }
+
+    private void toggleShowGrid(){
+        for(IButtonPressedObserver observer : this.observers) observer.onToggleGrid();
     }
 
     private void colorButtonClicked(CellColor color){

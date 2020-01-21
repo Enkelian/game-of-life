@@ -24,6 +24,7 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
     private int traceLength;
     private boolean clear;
     private Coordinate focusLowerBound, focusUpperBound;
+    private boolean gridPresent, gridChanged;
 
     public GamePanel(Board board){
         this.board = board;
@@ -43,6 +44,8 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.addKeyListener(this);
         this.board.addDayEndObserver(this);
         this.clear = false;
+        this.gridPresent = false;
+        this.gridChanged = false;
 
     }
 
@@ -67,10 +70,15 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
                     if(this.showTraces && trace != null) this.paintTrace(trace, g, rectPosX, rectPosY);
                     else this.paintEmptyCell(g, rectPosX, rectPosY);
                 }
-
+                if(this.gridPresent) this.paintGridOutline(g, rectPosX, rectPosY);
             }
         }
 
+    }
+
+    private void paintGridOutline(Graphics g, int rectPosX, int rectPosY){
+        g.setColor(Color.DARK_GRAY);
+        g.drawRect(rectPosX,rectPosY, this.cellSize, this.cellSize);
     }
 
     private void paintEmptyCell(Graphics g, int rectPosX, int rectPosY){
@@ -209,6 +217,14 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.showTraces = !this.showTraces;
     }
 
+    @Override
+    public void onToggleGrid() {
+        this.gridChanged = true;
+        if(!this.running){
+            this.changeGridPresentValue();
+            this.repaint();
+        }
+    }
 
 
     @Override
@@ -320,10 +336,15 @@ public class GamePanel extends JPanel implements Runnable, IButtonPressedObserve
         this.clear = !this.clear;
     }
 
+    private void changeGridPresentValue(){
+        this.gridPresent = !this.gridPresent;
+        this.gridChanged = false;
+    }
 
     @Override
     public void onDayEnd() {
         this.setTraceColorMultiplier();
         if(this.clear) this.executeClear();
+        if(this.gridChanged) changeGridPresentValue();
     }
 }

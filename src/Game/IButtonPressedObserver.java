@@ -6,6 +6,7 @@ public interface IButtonPressedObserver {
     void onZoomInPressed();
     void onZoomOutPressed();
     void onToggleTraces();
+    void onToggleGrid();
     void onToggleDraw();
     void onColorButtonClicked(CellColor color);
     void onClearBoard();
